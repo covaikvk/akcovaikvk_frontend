@@ -1,1 +1,48 @@
-{"project_info": {"project_id": "test"}}
+{
+  "project_info": {
+    "project_number": "117836324819",
+    "project_id": "kvkkitchen-eb029",
+    "storage_bucket": "kvkkitchen-eb029.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117836324819:android:97dbae1c4bd239f237d926",
+        "android_client_info": {
+          "package_name": "com.kvk.foodapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkWOOUtI6QVXpzOsVZN0XY0e67BCgPymc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117836324819:android:9497072aa666792a37d926",
+        "android_client_info": {
+          "package_name": "com.kvkcovai.foodapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkWOOUtI6QVXpzOsVZN0XY0e67BCgPymc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
