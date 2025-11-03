@@ -44,6 +44,22 @@ const CustomizeOrder = () => {
     fetchOrders();
   }, []);
 
+  const handleConfirm = (index) => {
+    setOrders((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, order_status: "Confirmed" } : item
+      )
+    );
+  };
+
+  const handlePaid = (index) => {
+    setOrders((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, payment_status: "Paid" } : item
+      )
+    );
+  };
+
   const getCardWidth = () => {
     if (width < 400) return "100%";
     if (width < 768) return "47%";
@@ -87,7 +103,9 @@ const CustomizeOrder = () => {
             <Ionicons name="calendar-outline" size={22} color="#007A33" />
             <Text style={styles.title}> Weekly Menu Orders</Text>
           </View>
-          <Text style={styles.subtitle}>View all customer weekly meal plans</Text>
+          <Text style={styles.subtitle}>
+            View all customer weekly meal plans
+          </Text>
         </View>
 
         {orders.length === 0 ? (
@@ -96,12 +114,16 @@ const CustomizeOrder = () => {
           </View>
         ) : (
           <View style={styles.ordersGrid}>
-            {orders.map((order) => (
+            {orders.map((order, index) => (
               <View key={order.id} style={[styles.card, { width: getCardWidth() }]}>
                 {/* Header */}
                 <View style={styles.cardHeader}>
                   <View style={styles.customerInfo}>
-                    <Ionicons name="person-circle-outline" size={18} color="#007A33" />
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={18}
+                      color="#007A33"
+                    />
                     <Text style={styles.customerName}>{order.name}</Text>
                   </View>
                   <View style={styles.dateTag}>
@@ -177,6 +199,67 @@ const CustomizeOrder = () => {
                       ₹{order.grand_total}
                     </Text>
                   </View>
+
+                  {/* ✅ Status + Buttons Section */}
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Order:</Text>
+                    <Text
+                      style={
+                        order.order_status === "Confirmed"
+                          ? styles.statusConfirmed
+                          : styles.statusPending
+                      }
+                    >
+                      {order.order_status || "Pending"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Payment:</Text>
+                    <Text
+                      style={
+                        order.payment_status === "Paid"
+                          ? styles.statusPaid
+                          : styles.statusPending
+                      }
+                    >
+                      {order.payment_status || "Unpaid"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmBtn,
+                        order.order_status === "Confirmed" && {
+                          backgroundColor: "#456B2D",
+                        },
+                      ]}
+                      onPress={() => handleConfirm(index)}
+                      disabled={order.order_status === "Confirmed"}
+                    >
+                      <Text style={styles.btnText}>
+                        {order.order_status === "Confirmed"
+                          ? "Confirmed"
+                          : "Confirm"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.paidBtn,
+                        order.payment_status === "Paid" && {
+                          backgroundColor: "#D6EEB9",
+                        },
+                      ]}
+                      onPress={() => handlePaid(index)}
+                      disabled={order.payment_status === "Paid"}
+                    >
+                      <Text style={styles.paidBtnText}>
+                        {order.payment_status === "Paid" ? "Paid" : "Mark Paid"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))}
@@ -240,7 +323,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   customerInfo: { flexDirection: "row", alignItems: "center" },
-  customerName: { fontSize: 14, fontWeight: "600", color: "#2c3e50", marginLeft: 5 },
+  customerName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginLeft: 5,
+  },
   dateTag: {
     backgroundColor: "#EAFCE6",
     paddingHorizontal: 6,
@@ -255,7 +343,12 @@ const styles = StyleSheet.create({
   infoText: { fontSize: 12, color: "#555", marginLeft: 6 },
   addressText: { fontSize: 12, color: "#444", marginBottom: 6 },
   daysSection: { marginTop: 6 },
-  sectionTitle: { fontWeight: "600", color: "#007A33", marginBottom: 4, fontSize: 13 },
+  sectionTitle: {
+    fontWeight: "600",
+    color: "#007A33",
+    marginBottom: 4,
+    fontSize: 13,
+  },
   daysGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -289,13 +382,84 @@ const styles = StyleSheet.create({
   menuValue: { fontSize: 11, color: "#555", flexShrink: 1 },
   emptyDay: { color: "#aaa", textAlign: "center", fontStyle: "italic" },
   footer: { borderTopWidth: 1, borderColor: "#ecf0f1", paddingTop: 6 },
+
+  /* ✅ Added Status + Button Styles */
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  label: {
+    fontWeight: "600",
+    color: "#333",
+  },
+  statusConfirmed: {
+    backgroundColor: "#C6EAAF",
+    color: "#007A33",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontWeight: "600",
+  },
+  statusPending: {
+    backgroundColor: "#FFD7B5",
+    color: "#A85A00",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontWeight: "600",
+  },
+  statusPaid: {
+    backgroundColor: "#C6EAAF",
+    color: "#007A33",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontWeight: "600",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: scale(12),
+  },
+  confirmBtn: {
+    flex: 1,
+    backgroundColor: "#173b01",
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginRight: 8,
+    alignItems: "center",
+  },
+  paidBtn: {
+    flex: 1,
+    backgroundColor: "#d6eeb9",
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  btnText: {
+    color: "#d6eeb9",
+    fontWeight: "600",
+    fontSize: scale(15),
+  },
+  paidBtnText: {
+    color: "#173b01",
+    fontWeight: "600",
+    fontSize: scale(15),
+  },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 1,
   },
   totalValue: { color: "#444" },
-  grandTotal: { borderTopWidth: 1, borderColor: "#e0e0e0", marginTop: 4, paddingTop: 4 },
+  grandTotal: {
+    borderTopWidth: 1,
+    borderColor: "#e0e0e0",
+    marginTop: 4,
+    paddingTop: 4,
+  },
   grandTotalValue: { color: "#007A33", fontWeight: "700" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loaderText: { color: "#007A33", marginTop: 8, fontSize: r(14, 16) },
