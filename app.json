@@ -1,11 +1,12 @@
 {
   "expo": {
     "name": "Kandha Vilas Kitchen",
-    "slug": "food-app",
+    "slug": "Kandha Vilas Kitchen",
     "version": "1.0.0", 
     "orientation": "portrait",
-    "icon": "./assets/logo_icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/icon_image.png",
+     "scheme": "kandha vilas kitchen",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
 
     "splash": {
