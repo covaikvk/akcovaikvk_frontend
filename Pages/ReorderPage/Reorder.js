@@ -27,7 +27,11 @@ export default function Myorder() {
   const [userDetails, setUserDetails] = useState(null);
   const [reordering, setReordering] = useState(null);
 
-  // ✅ Fetch normal product orders
+  
+  const [showMoreOrders, setShowMoreOrders] = useState(false);
+  const [showMoreRegular, setShowMoreRegular] = useState(false);
+  const [showMoreCustom, setShowMoreCustom] = useState(false);
+
   const fetchOrders = async (token) => {
     try {
       const response = await fetch(
@@ -50,7 +54,6 @@ export default function Myorder() {
     }
   };
 
-  // ✅ Fetch regular menu orders
   const fetchRegularMenuOrders = async (userId) => {
     try {
       const response = await fetch(
@@ -64,7 +67,6 @@ export default function Myorder() {
     }
   };
 
-  // ✅ Fetch custom menu orders - WITH AUTHENTICATION
   const fetchCustomMenuOrders = async (userId, token) => {
     try {
       const response = await fetch(
@@ -77,21 +79,14 @@ export default function Myorder() {
           },
         }
       );
-      
-      if (!response.ok) {
-        console.log(`❌ Custom menu API response not OK: ${response.status}`);
-        return;
-      }
-      
+      if (!response.ok) return;
       const data = await response.json();
-      console.log("✅ Custom Menu Orders:", data);
       setCustomOrders(data);
     } catch (error) {
       console.error("❌ Error fetching custom menu orders:", error);
     }
   };
 
-  // ✅ Fetch all user-related data
   const fetchUserDetails = async () => {
     try {
       const user = await AsyncStorage.getItem("userDetails");
@@ -109,7 +104,7 @@ export default function Myorder() {
         await Promise.all([
           fetchOrders(token),
           fetchRegularMenuOrders(parsedUser.id),
-          fetchCustomMenuOrders(parsedUser.id, token), // Pass token here
+          fetchCustomMenuOrders(parsedUser.id, token),
         ]);
       }
     } catch (error) {
@@ -134,154 +129,134 @@ export default function Myorder() {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'delivered':
-      case 'completed':
-        return '#4CAF50'; // Green
-      case 'pending':
-        return '#FF9800'; // Orange
-      case 'cancelled':
-      case 'failed':
-        return '#F44336'; // Red
-      case 'processing':
-        return '#2196F3'; // Blue
+      case "delivered":
+      case "completed":
+        return "#4CAF50";
+      case "pending":
+        return "#FF9800";
+      case "cancelled":
+      case "failed":
+        return "#F44336";
+      case "processing":
+        return "#2196F3";
       default:
-        return '#757575'; // Gray
+        return "#757575";
     }
   };
 
   const getPaymentStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'completed':
-        return '#4CAF50'; // Green
-      case 'pending':
-        return '#FF9800'; // Orange
-      case 'failed':
-        return '#F44336'; // Red
+      case "paid":
+      case "completed":
+        return "#4CAF50";
+      case "pending":
+        return "#FF9800";
+      case "failed":
+        return "#F44336";
       default:
-        return '#757575'; // Gray
+        return "#757575";
     }
   };
 
- const handleReorderNormal = async (order) => {
-  try {
-    setReordering(order.id);
+  const handleReorderNormal = async (order) => {
+    try {
+      setReordering(order.id);
 
-    const user = await AsyncStorage.getItem("userDetails");
-    const parsedUser = JSON.parse(user);
+      const user = await AsyncStorage.getItem("userDetails");
+      const parsedUser = JSON.parse(user);
 
-    if (!parsedUser) {
-      Alert.alert("Error", "Session expired. Please log in again.");
-      navigation.navigate("Login");
-      return;
+      if (!parsedUser) {
+        Alert.alert("Error", "Session expired. Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
+
+      const safeItems = Array.isArray(order.items) ? order.items : [];
+
+      const reorderPayload = {
+        user_id: parsedUser.id,
+        address_id: order.address_id,
+        name: order.name,
+        phone_number: order.phone_number,
+        payment_method: order.payment_method || "Cash On Delivery",
+        payment_status: "Pending",
+        instructions: order.instructions || "",
+        items: safeItems.map((item) => ({
+          product_id: item.product_id || null,
+          name: item.name || "Unknown Product",
+          price: parseFloat(item.price || 0),
+          quantity: item.quantity || 1,
+        })),
+        total_amount: order.total_amount || 0,
+        isReorder: true,
+      };
+
+      navigation.navigate("SelectAddress", {
+        reorder: true,
+        orderData: reorderPayload,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to reorder this product. Please try again.");
+    } finally {
+      setReordering(null);
     }
+  };
 
-    // ✅ Safely extract items array
-    const safeItems = Array.isArray(order.items) ? order.items : [];
+  const handleReorderRegularMenu = async (order) => {
+    try {
+      setReordering(order.id);
+      const user = await AsyncStorage.getItem("userDetails");
+      const parsedUser = JSON.parse(user);
+      if (!parsedUser) {
+        Alert.alert("Error", "Session expired. Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
 
-    const reorderPayload = {
-      user_id: parsedUser.id,
-      address_id: order.address_id,
-      name: order.name,
-      phone_number: order.phone_number,
-      payment_method: order.payment_method || "Cash On Delivery",
-      payment_status: "Pending",
-      instructions: order.instructions || "",
-      items: safeItems.map((item) => ({
-        product_id: item.product_id || null,
-        name: item.name || "Unknown Product",
-        price: parseFloat(item.price || 0),
-        quantity: item.quantity || 1,
-      })),
-      total_amount: order.total_amount || 0,
-      isReorder: true,
-    };
+      const reorderPayload = {
+        user_id: parsedUser.id,
+        name: order.name,
+        phone_number: order.phone_number,
+        address_1: order.address_1,
+        address_2: order.address_2,
+        landmark: order.landmark,
+        pincode: order.pincode,
+        city: order.city,
+        state: order.state,
+        numberOfPerson: order.numberOfPerson,
+        numberOfWeeks: order.numberOfWeeks,
+        regularmenuname: order.regularmenuname,
+        plan_price: order.plan_price,
+        total_amount: order.total_amount,
+        payment_status: "pending",
+        order_status: "pending",
+        isReorder: true,
+      };
 
-    console.log("🛒 Safe reorder payload:", reorderPayload);
-
-    navigation.navigate("SelectAddress", {
-      reorder: true,
-      orderData: reorderPayload,
-    });
-  } catch (error) {
-    console.error("❌ Reorder error:", error);
-    Alert.alert("Error", "Failed to reorder this product. Please try again.");
-  } finally {
-    setReordering(null);
-  }
-};
-
-const handleReorderRegularMenu = async (order) => {
-  try {
-    setReordering(order.id);
-
-    const user = await AsyncStorage.getItem("userDetails");
-    const parsedUser = JSON.parse(user);
-
-    if (!parsedUser) {
-      Alert.alert("Error", "Session expired. Please log in again.");
-      navigation.navigate("Login");
-      return;
+      navigation.navigate("RegularMenu", {
+        reorder: true,
+        orderData: reorderPayload,
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to reorder regular plan. Try again.");
+    } finally {
+      setReordering(null);
     }
+  };
 
-    const reorderPayload = {
-      user_id: parsedUser.id,
-      name: order.name,
-      phone_number: order.phone_number,
-      address_1: order.address_1,
-      address_2: order.address_2,
-      landmark: order.landmark,
-      pincode: order.pincode,
-      city: order.city,
-      state: order.state,
-
-      numberOfPerson: order.numberOfPerson,
-      numberOfWeeks: order.numberOfWeeks,
-      regularmenuname: order.regularmenuname,
-      plan_price: order.plan_price,
-      total_amount: order.total_amount,
-
-      payment_status: "pending",
-      order_status: "pending",
-      isReorder: true
-    };
-
-    console.log("🔥 Regular Reorder Payload:", reorderPayload);
-
-    // ✅ Navigate to actual Regular Menu screen
-    navigation.navigate("RegularMenu", {
-      reorder: true,
-      orderData: reorderPayload,
-    });
-
-  } catch (error) {
-    console.error("❌ Regular Menu Reorder Error:", error);
-    Alert.alert("Error", "Failed to reorder regular plan. Try again.");
-  } finally {
-    setReordering(null);
-  }
-};
-
-
-
-
-  // ✅ Handle Reorder for Custom Menu Orders
   const handleReorderCustomMenu = async (order) => {
     setReordering(order.id);
     try {
-      // Navigate to custom menu page with order details
-      navigation.navigate("CustomizeMenu", { 
+      navigation.navigate("CustomizeMenuScreen", {
         reorderData: {
           persons: order.number_of_persons,
           weeks: order.number_of_weeks,
           address1: order.address_1,
           address2: order.address_2,
-          foodType: order.foodType // if available in your API
-        }
+          foodType: order.foodType,
+        },
       });
-      Alert.alert("Reorder", "Redirecting to custom menu");
     } catch (error) {
-      console.error("Reorder error:", error);
       Alert.alert("Error", "Failed to reorder");
     } finally {
       setReordering(null);
@@ -290,7 +265,12 @@ const handleReorderRegularMenu = async (order) => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color="#1E3A08" />
       </View>
     );
@@ -300,264 +280,230 @@ const handleReorderRegularMenu = async (order) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
           <Ionicons name="arrow-back" size={r(32, 48)} color="#1E3A08" />
         </TouchableOpacity>
         <Text style={styles.headerText}>My Orders</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: r(100, 150) }}>
-        {/* ================= NORMAL ORDERS ================= */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: r(100, 150) }}
+      >
         <Text style={styles.sectionTitle}>Regular Product Orders</Text>
         {orders.length > 0 ? (
-          orders.map((order) => {
-            const { day, month } = formatDate(order.created_at);
-            const itemsText = order.items
-              .map((item) =>
-                item.name
-                  ? `${item.name} x${item.quantity}`
-                  : `ProductID:${item.product_id} x${item.quantity}`
-              )
-              .join(", ");
-            return (
-              <View key={order.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.row}>
-                    <View style={styles.dateContainer}>
-                      <Text style={styles.dateText}>{day}</Text>
-                      <Text style={styles.yearText}>{month}</Text>
+          <>
+            {orders
+              .slice(0, showMoreOrders ? orders.length : 3)
+              .map((order) => {
+                const { day, month } = formatDate(order.created_at);
+                const itemsText = order.items
+                  .map((item) =>
+                    item.name
+                      ? `${item.name} x${item.quantity}`
+                      : `ProductID:${item.product_id} x${item.quantity}`
+                  )
+                  .join(", ");
+                return (
+                  <View key={order.id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.row}>
+                        <View style={styles.dateContainer}>
+                          <Text style={styles.dateText}>{day}</Text>
+                          <Text style={styles.yearText}>{month}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.title}>{order.name}</Text>
+                          <Text style={styles.items}>{itemsText}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.smallReorderButton}
+                        onPress={() => handleReorderNormal(order)}
+                        disabled={reordering === order.id}
+                      >
+                        {reordering === order.id ? (
+                          <ActivityIndicator size="small" color="#1E3A08" />
+                        ) : (
+                          <Text style={styles.reorderButtonText}>Reorder</Text>
+                        )}
+                      </TouchableOpacity>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.title}>{order.name}</Text>
-                      <Text style={styles.items}>{itemsText}</Text>
+                    <View style={styles.divider} />
+                    <View style={styles.footerRow}>
+                      <Text style={styles.total}>
+                        Total: ₹{order.total_amount}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.status,
+                          { color: getStatusColor(order.order_status) },
+                        ]}
+                      >
+                        {order.order_status}
+                      </Text>
                     </View>
                   </View>
-                  {/* Small Reorder Button - Top Right */}
-                 <TouchableOpacity
-  style={styles.smallReorderButton}
-  onPress={() => handleReorderNormal(order)}
-  disabled={reordering === order.id}
->
-  {reordering === order.id ? (
-    <ActivityIndicator size="small" color="#1E3A08" />
-  ) : (
-    <Text style={styles.reorderButtonText}>Reorder</Text>
-  )}
-</TouchableOpacity>
-
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.footerRow}>
-                  <Text style={styles.total}>Total: ₹{order.total_amount}</Text>
-                  <Text
-                    style={[
-                      styles.status,
-                      { color: getStatusColor(order.order_status) }
-                    ]}
-                  >
-                    {order.order_status}
-                  </Text>
-                </View>
-              </View>
-            );
-          })
+                );
+              })}
+            {orders.length > 5 && (
+              <TouchableOpacity
+                style={styles.seeMoreBtn}
+                onPress={() => setShowMoreOrders(!showMoreOrders)}
+              >
+                <Text style={styles.seeMoreText}>
+                  {showMoreOrders ? "See Less" : "See More"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
         ) : (
           <Text style={styles.noDataText}>No normal orders found</Text>
         )}
 
-      {/* ================= REGULAR MENU ORDERS ================= */}
-<Text style={[styles.sectionTitle, { marginTop: 25 }]}>Regular Menu Orders</Text>
-{regularOrders.length > 0 ? (
-  regularOrders.map((order) => {
-    const { day, month, year, fullDate } = formatDate(order.created_at);
-    return (
-      <View key={order.id} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.row}>
-            <View style={styles.dateContainer}>
-              <Text style={styles.dateText}>{day}</Text>
-              <Text style={styles.yearText}>{month}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.regularTitle}>{order.name}</Text>
-              <Text style={styles.regularSubTitle}>{order.regularmenuname}</Text>
-              <Text style={styles.items}>
-                👥 {order.numberOfPerson} Person(s) × 🗓 {order.numberOfWeeks} Week(s)
-              </Text>
-              <Text style={styles.items}>🏠 {order.address_1}</Text>
-            </View>
-          </View>
+        <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
+          Regular Menu Orders
+        </Text>
+        {regularOrders.length > 0 ? (
+          <>
+            {regularOrders
+              .slice(0, showMoreRegular ? regularOrders.length : 3)
+              .map((order) => {
+                const { day, month, fullDate } = formatDate(order.created_at);
+                return (
+                  <View key={order.id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.row}>
+                        <View style={styles.dateContainer}>
+                          <Text style={styles.dateText}>{day}</Text>
+                          <Text style={styles.yearText}>{month}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.regularTitle}>{order.name}</Text>
+                          <Text style={styles.regularSubTitle}>
+                            {order.regularmenuname}
+                          </Text>
+                          <Text style={styles.items}>
+                            👥 {order.numberOfPerson} Person(s) × 🗓{" "}
+                            {order.numberOfWeeks} Week(s)
+                          </Text>
+                          <Text style={styles.items}>🏠 {order.address_1}</Text>
+                        </View>
+                      </View>
 
-          {/* Reorder Button */}
-          <TouchableOpacity 
-            style={styles.smallReorderButton}
-            onPress={() => handleReorderRegularMenu(order)}
-            disabled={reordering === order.id}
-          >
-            {reordering === order.id ? (
-              <ActivityIndicator size="small" color="#1E3A08" />
-            ) : (
-              <Text style={styles.reorderButtonText}>Reorder</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.footerRow}>
-          <Text style={styles.total}>
-            Plan ₹{order.plan_price} | Total ₹{order.total_amount}
-          </Text>
-          <Text
-            style={[
-              styles.status,
-              { color: getStatusColor(order.order_status) }
-            ]}
-          >
-            {order.order_status}
-          </Text>
-        </View>
-
-        <View style={styles.statusRow}>
-          <Text style={[styles.paymentText, { color: getPaymentStatusColor(order.payment_status) }]}>
-            💳 Payment: {order.payment_status}
-          </Text>
-        </View>
-
-        <Text style={styles.dateFooter}>📅 Ordered on: {fullDate}</Text>
-      </View>
-    );
-  })
-) : (
-  <Text style={styles.noDataText}>No regular menu orders found</Text>
-)}
-
-       {/* ================= CUSTOM MENU ORDERS ================= */}
-<Text style={[styles.sectionTitle, { marginTop: 25 }]}>
-  Customized Menu Orders
-</Text>
-
-{customOrders.length > 0 ? (
-  customOrders.map((order) => {
-    const { day, month, year, fullDate } = formatDate(order.created_at);
-
-    const handleReorderCustomMenu = (order) => {
-      try {
-        const menuPayload = {
-          ...order,
-          numPersons: order.number_of_persons,
-          numWeeks: order.number_of_weeks,
-          totalAmount: parseFloat(order.total),
-          gst: parseFloat(order.gst),
-          grandTotal: parseFloat(order.grand_total),
-          isReorder: true, // Flag to identify reorder
-        };
-
-        console.log("🔁 Reordering custom menu:", menuPayload);
-
-        navigation.navigate("CustomizeMenuScreen", {
-          menuDetails: menuPayload,
-        });
-      } catch (error) {
-        console.error("❌ Error while reordering:", error);
-        Alert.alert("Error", "Unable to process reorder. Please try again.");
-      }
-    };
-
-    return (
-      <View key={order.id} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.row}>
-            <View style={styles.dateContainer}>
-              <Text style={styles.dateText}>{day}</Text>
-              <Text style={styles.yearText}>{month}</Text>
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <Text style={styles.regularTitle}>{order.name}</Text>
-
-              {/* Order Details */}
-              <View style={styles.detailsContainer}>
-                <Text style={styles.detailItem}>
-                  👥 <Text style={styles.detailLabel}>Persons:</Text>{" "}
-                  {order.number_of_persons}
-                </Text>
-                <Text style={styles.detailItem}>
-                  🗓 <Text style={styles.detailLabel}>Weeks:</Text>{" "}
-                  {order.number_of_weeks}
-                </Text>
-              </View>
-
-              {/* Address */}
-              <View style={styles.addressContainer}>
-                <Text style={styles.detailItem}>
-                  🏠 <Text style={styles.detailLabel}>Address:</Text>{" "}
-                  {order.address_1}
-                  {order.address_2 ? `, ${order.address_2}` : ""}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Small Reorder Button - Top Right */}
-          <TouchableOpacity
-            style={styles.smallReorderButton}
-            onPress={() => handleReorderCustomMenu(order)}
-            disabled={reordering === order.id}
-          >
-            {reordering === order.id ? (
-              <ActivityIndicator size="small" color="#1E3A08" />
-            ) : (
-              <Text style={styles.reorderButtonText}>Reorder</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Total Amount */}
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalAmount}>Total: ₹{order.total}</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Status and Date */}
-        <View style={styles.statusContainer}>
-          <View style={styles.statusRow}>
-            <View style={styles.statusItem}>
-              <Text style={styles.statusLabel}>Order Status:</Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: getStatusColor(order.order_status) },
-                ]}
+                      <TouchableOpacity
+                        style={styles.smallReorderButton}
+                        onPress={() => handleReorderRegularMenu(order)}
+                        disabled={reordering === order.id}
+                      >
+                        {reordering === order.id ? (
+                          <ActivityIndicator size="small" color="#1E3A08" />
+                        ) : (
+                          <Text style={styles.reorderButtonText}>Reorder</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.footerRow}>
+                      <Text style={styles.total}>
+                        Plan ₹{order.plan_price} | Total ₹{order.total_amount}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.status,
+                          { color: getStatusColor(order.order_status) },
+                        ]}
+                      >
+                        {order.order_status}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            {regularOrders.length > 5 && (
+              <TouchableOpacity
+                style={styles.seeMoreBtn}
+                onPress={() => setShowMoreRegular(!showMoreRegular)}
               >
-                {order.order_status}
-              </Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={styles.statusLabel}>Payment:</Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: getPaymentStatusColor(order.payment_status) },
-                ]}
+                <Text style={styles.seeMoreText}>
+                  {showMoreRegular ? "See Less" : "See More"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.noDataText}>No regular menu orders found</Text>
+        )}
+
+        <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
+          Customized Menu Orders
+        </Text>
+        {customOrders.length > 0 ? (
+          <>
+            {customOrders
+              .slice(0, showMoreCustom ? customOrders.length : 3)
+              .map((order) => {
+                const { day, month, fullDate } = formatDate(order.created_at);
+                return (
+                  <View key={order.id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.row}>
+                        <View style={styles.dateContainer}>
+                          <Text style={styles.dateText}>{day}</Text>
+                          <Text style={styles.yearText}>{month}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.regularTitle}>{order.name}</Text>
+                          <Text style={styles.items}>
+                            👥 {order.number_of_persons} | 🗓{" "}
+                            {order.number_of_weeks} Weeks
+                          </Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.smallReorderButton}
+                        onPress={() => handleReorderCustomMenu(order)}
+                        disabled={reordering === order.id}
+                      >
+                        {reordering === order.id ? (
+                          <ActivityIndicator size="small" color="#1E3A08" />
+                        ) : (
+                          <Text style={styles.reorderButtonText}>Reorder</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.footerRow}>
+                      <Text style={styles.total}>Total: ₹{order.total}</Text>
+                      <Text
+                        style={[
+                          styles.status,
+                          { color: getStatusColor(order.order_status) },
+                        ]}
+                      >
+                        {order.order_status}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            {customOrders.length > 5 && (
+              <TouchableOpacity
+                style={styles.seeMoreBtn}
+                onPress={() => setShowMoreCustom(!showMoreCustom)}
               >
-                {order.payment_status}
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.orderDate}>📅 Order placed on: {fullDate}</Text>
-        </View>
-      </View>
-    );
-  })
-) : (
-  <Text style={styles.noDataText}>No customized menu orders found</Text>
-)}
-
+                <Text style={styles.seeMoreText}>
+                  {showMoreCustom ? "See Less" : "See More"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.noDataText}>No customized menu orders found</Text>
+        )}
       </ScrollView>
 
       <View style={styles.footerWrapper}>
@@ -566,6 +512,7 @@ const handleReorderRegularMenu = async (order) => {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -763,7 +710,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  // Small Reorder Button Styles with Text
   smallReorderButton: {
     backgroundColor: "#C4E6A1",
     paddingVertical: r(6, 8),
@@ -791,5 +737,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  seeMoreBtn: {
+    alignSelf: "flex-end",
+    marginRight: r(22, 36), 
+    marginVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: "#C4E6A1",
+    borderRadius: 10,
+  },
+  seeMoreText: {
+    color: "#1E3A08",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

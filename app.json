@@ -4,37 +4,34 @@
     "slug": "kandha-vilas-kitchen",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon_image.png",
+    "icon": "./assets/icon-image-final.png",
     "scheme": "kandha-vilas-kitchen",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+
     "extra": {
       "eas": {
         "projectId": "5324e4f5-7944-4595-a7be-c095948e12c8"
       }
     },
+
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSUserNotificationUsageDescription": "We use notifications to alert you about your food orders."
-      }
+      "supportsTablet": true
     },
+
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icom-image-final.png",
+        "backgroundColor": "#165016"
       },
       "package": "com.kvkcovai.foodapp",
       "googleServicesFile": "./google-services.json"
     },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
+
     "plugins": [
       [
         "expo-build-properties",
@@ -53,6 +50,7 @@
         }
       ]
     ],
+
     "owner": "dineshmani123"
   }
 }

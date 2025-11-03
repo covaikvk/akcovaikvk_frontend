@@ -354,8 +354,7 @@
 
 
 
-import React, { useEffect } from "react";
-import * as Notifications from "expo-notifications";
+import React from "react";
 import { Alert } from "react-native";
 import Constants from "expo-constants";
 import "./config/firebaseConfig";
@@ -429,50 +428,10 @@ import RegularOrder from "./Pages/Profilepage/RegularOrder";
 import Quotations from "./Pages/Profilepage/Quotations";
 import CustomizeOrder from "./Pages/Profilepage/CustomizeOrder";
 import RegularMenuAddress from "./Pages/RegularMenu/RegularMenuAddress";
+
 const Stack = createStackNavigator();
 
-// Notification Handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
-// ✅ Get projectId for push token
-const projectId =
-  Constants?.expoConfig?.extra?.eas?.projectId ||
-  Constants?.easConfig?.projectId; // fallback for safety
-
 export default function App() {
-
-  useEffect(() => {
-    registerForPushNotifications();
-  }, []);
-
-  const registerForPushNotifications = async () => {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Enable notifications to receive alerts.");
-        return;
-      }
-
-      // ✅ Get Expo Push Token properly
-      const token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
-
-      console.log("✅ Expo Push Token:", token);
-
-    } catch (err) {
-      console.log("❌ Notification Error:", err);
-    }
-  };
-
   return (
     <FoodTypeProvider>
       <FavouritesProvider>
@@ -481,7 +440,6 @@ export default function App() {
             <QuotationProvider>
               <NavigationContainer>
                 <Stack.Navigator initialRouteName="Firstpage">
-
                   {/* Auth */}
                   <Stack.Screen name="Firstpage" component={Firstpage} options={{ headerShown: false }} />
                   <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
@@ -543,8 +501,7 @@ export default function App() {
                   <Stack.Screen name="RegularOrder" component={RegularOrder} options={{ headerShown: false }} />
                   <Stack.Screen name="Quotations" component={Quotations} options={{ headerShown: false }} />
                   <Stack.Screen name="CustomizeOrder" component={CustomizeOrder} options={{ headerShown: false }} />
-                     <Stack.Screen name="RegularMenuAddress" component={RegularMenuAddress} options={{ headerShown: false }} />
-
+                  <Stack.Screen name="RegularMenuAddress" component={RegularMenuAddress} options={{ headerShown: false }} />
                 </Stack.Navigator>
               </NavigationContainer>
             </QuotationProvider>

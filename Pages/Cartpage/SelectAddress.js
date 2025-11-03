@@ -1,6 +1,5 @@
 // SelectAddress.js
 import React, { useState, useCallback, useContext, useEffect } from "react";
-import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import {
   View,
@@ -171,96 +170,86 @@ export default function SelectAddress({ route, navigation }) {
     );
   };
 
-const handlePlaceOrder = async () => {
-  if (!selectedId) {
-    Alert.alert("Please select an address!");
-    return;
-  }
-
-  const selectedAddress = addresses.find((addr) => addr.id === selectedId);
-  if (!selectedAddress) return;
-
-  const projectId =
-    Constants?.expoConfig?.extra?.eas?.projectId ||
-    Constants?.easConfig?.projectId;
-
-  try {
-    setLoading(true);
-    const token = await AsyncStorage.getItem("token");
-
-    console.log("🔥 TOKEN:", token);
-
-    if (!token) {
-      Alert.alert("Login expired. Please login again.");
-      setLoading(false);
+  const handlePlaceOrder = async () => {
+    if (!selectedId) {
+      Alert.alert("Please select an address!");
       return;
     }
 
-    const orderItems = Array.isArray(cartItems)
-      ? cartItems.map((item) => ({
-          name: item.name || "Unknown Product",
-          quantity: item.quantity || 1,
-          price: Number(item.price) || 0,
-        }))
-      : [];
+    const selectedAddress = addresses.find((addr) => addr.id === selectedId);
+    if (!selectedAddress) return;
 
-    const totalAmount = orderItems.reduce(
-      (sum, i) => sum + i.price * i.quantity,
-      0
-    );
-
-    const { data: expoToken } = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
-
-    const payload = {
-      address_id: selectedAddress.id,
-      items: orderItems,
-      payment_method: "Cash On Delivery",
-      instructions: "Leave at door",
-      total_amount: totalAmount,
-      name: selectedAddress.name || "Customer",
-      phone_number: selectedAddress.phone_number || "0000000000",
-      expoToken: expoToken,
-    };
-
-    console.log("📦 PAYLOAD:", JSON.stringify(payload));
-
-    const response = await fetch("https://kvk-backend.onrender.com/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const raw = await response.text();
-    console.log("📨 SERVER RAW RESPONSE:", raw);
-
-    // Try parse JSON
-    let data;
     try {
-      data = JSON.parse(raw);
-    } catch {
-      data = raw;
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Login expired. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      const orderItems = Array.isArray(cartItems)
+        ? cartItems.map((item) => ({
+            name: item.name || "Unknown Product",
+            quantity: item.quantity || 1,
+            price: Number(item.price) || 0,
+          }))
+        : [];
+
+      const totalAmount = orderItems.reduce(
+        (sum, i) => sum + i.price * i.quantity,
+        0
+      );
+
+      const payload = {
+        address_id: selectedAddress.id,
+        items: orderItems,
+        payment_method: "Cash On Delivery",
+        instructions: "Leave at door",
+        total_amount: totalAmount,
+        name: selectedAddress.name || "Customer",
+        phone_number: selectedAddress.phone_number || "0000000000",
+      };
+
+      console.log("📦 PAYLOAD:", JSON.stringify(payload));
+
+      const response = await fetch(
+        "https://kvk-backend.onrender.com/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const raw = await response.text();
+      console.log("📨 SERVER RAW RESPONSE:", raw);
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = raw;
+      }
+
+      setLoading(false);
+
+      if (response.ok) {
+        setShowSuccess(true);
+      } else {
+        console.log("🚨 ORDER FAILED:", data);
+        Alert.alert("Error", typeof data === "string" ? data : data.message);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.log("💥 ORDER ERROR:", error);
+      Alert.alert("Error", "Something went wrong. " + error.message);
     }
-
-    setLoading(false);
-
-    if (response.ok) {
-      setShowSuccess(true);
-    } else {
-      console.log("🚨 ORDER FAILED:", data);
-      Alert.alert("Error", typeof data === "string" ? data : data.message);
-    }
-  } catch (error) {
-    setLoading(false);
-    console.log("💥 ORDER ERROR:", error);
-    Alert.alert("Error", "Something went wrong. " + error.message);
-  }
-};
-
+  };
 
   const handleOk = async () => {
     setShowSuccess(false);
