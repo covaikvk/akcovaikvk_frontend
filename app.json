@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Kandha Vilas Kitchen",
-    "slug": "Kandha Vilas Kitchen",
-    "version": "1.0.0", 
+    "slug": "food-app",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon_image.png",
-     "scheme": "kandha vilas kitchen",
+    "scheme": "kandha-vilas-kitchen",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
 
@@ -14,17 +14,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "extra": {
       "eas": {
         "projectId": "e3f38968-188a-4965-856e-7542c493d776"
       }
     },
+
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSUserNotificationUsageDescription": "We use notifications to alert you about your food orders."
       }
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -33,9 +36,11 @@
       "package": "com.kvkcovai.foodapp",
       "googleServicesFile": "./google-services.json"
     },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
+
     "plugins": [
       [
         "expo-build-properties",
