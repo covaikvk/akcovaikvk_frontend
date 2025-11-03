@@ -16,6 +16,14 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome } from "@expo/vector-icon
 import * as Print from "expo-print";
 import { useNavigation } from "@react-navigation/native";
 import { scale } from "react-native-size-matters";
+// 🎯 CRITICAL IMPORTS FOR BASE64 CONVERSION
+// FIX: Using the /legacy path to resolve the deprecation error
+import * as FileSystem from 'expo-file-system/legacy';
+import { Asset } from 'expo-asset';
+
+// 1. REQUIRE THE LOCAL IMAGE ASSET
+// ⚠️ VERIFY THIS PATH: If your file is not at '../../assets/logo1.png', adjust it.
+const logoAsset = require('../../assets/logo1.png');
 
 export default function Quotations() {
   const navigation = useNavigation();
@@ -24,7 +32,11 @@ export default function Quotations() {
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [gstPercent, setGstPercent] = useState(18);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // STATE TO HOLD THE DYNAMICALLY GENERATED BASE64 URI
+  const [logoBase64, setLogoBase64] = useState(null); 
 
+  // --- EFFECT 1: FETCH QUOTATIONS ---
   useEffect(() => {
     const fetchQuotations = async () => {
       try {
@@ -52,6 +64,31 @@ export default function Quotations() {
     fetchQuotations();
   }, []);
 
+  // --- EFFECT 2: CONVERT LOGO TO BASE64 ---
+  useEffect(() => {
+    const loadLogoBase64 = async () => {
+      try {
+        const asset = Asset.fromModule(logoAsset);
+        await asset.downloadAsync();
+        
+        // Use the string 'base64' directly for encoding
+        const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
+          encoding: 'base64', 
+        });
+
+        // Construct the full data URI
+        setLogoBase64(`data:image/${asset.type};base64,${base64}`);
+
+      } catch (e) {
+        console.error("Failed to load and convert logo to Base64:", e);
+        Alert.alert("PDF Error", "Could not load the logo for the quotation. Check asset path/file size.");
+        setLogoBase64(null); 
+      }
+    };
+    loadLogoBase64();
+  }, []); 
+
+
   const filtered = quotations.filter(
     (q) =>
       q.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,122 +108,128 @@ export default function Quotations() {
   const gstAmount = (subtotal * gstPercent) / 100;
   const total = subtotal + gstAmount;
 
-const generatePDF = async () => {
-  if (!selectedQuotation) return;
+  const generatePDF = async () => {
+    if (!selectedQuotation) return;
+    
+    // CRITICAL CHECK: Ensure the logo data is ready before proceeding
+    if (!logoBase64) {
+      Alert.alert("Please Wait", "The logo data is still loading or failed to load. Try again in a moment.");
+      return;
+    }
 
-  const quotationNo = `KVK/${new Date(selectedQuotation.created_at)
-    .getFullYear()}/${(selectedQuotation.id || 1)
-    .toString()
-    .padStart(4, "0")}`;
+    const quotationNo = `KVK/${new Date(selectedQuotation.created_at)
+      .getFullYear()}/${(selectedQuotation.id || 1)
+      .toString()
+      .padStart(4, "0")}`;
 
-  const validUntil = new Date(
-    new Date(selectedQuotation.created_at).getTime() + 15 * 24 * 60 * 60 * 1000
-  ).toLocaleDateString("en-IN");
+    const validUntil = new Date(
+      new Date(selectedQuotation.created_at).getTime() + 15 * 24 * 60 * 60 * 1000
+    ).toLocaleDateString("en-IN");
 
-  const html = `
-  <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; margin:0; padding:0; color:#000; }
-        .header {
-          background-color:#1a5d3a; color:#fff; text-align:center;
-          padding:15px 10px 10px 10px;
-        }
-        .logo { width:60px; height:60px; object-fit:contain; }
-        h1 { margin:5px 0; font-size:20px; letter-spacing:1px; }
-        .subtext { font-size:10px; margin:0; line-height:14px; }
-        .title { text-align:center; color:#1a5d3a; margin:20px 0 5px; font-size:20px; }
-        .subhead { text-align:center; font-size:11px; color:#333; }
-        table { width:100%; border-collapse:collapse; font-size:11px; }
-        th,td { border:1px solid #ccc; padding:6px; text-align:left; }
-        th { background:#1a5d3a; color:#fff; text-align:center; }
-        .section { padding:0 20px; margin-top:10px; }
-        .two-col { display:flex; justify-content:space-between; }
-        .totals { margin:20px 20px 0; width:260px; float:right; background:#f5f5f5;
-          border-radius:6px; padding:10px; }
-        .totals table { width:100%; border:none; }
-        .totals td { border:none; padding:3px 0; font-size:11px; }
-        .grand { color:#1a5d3a; font-weight:bold; font-size:12px; }
-        .terms { clear:both; padding:0 20px; margin-top:40px; font-size:10px; }
-        .footer { text-align:center; color:#444; font-size:9px; margin-top:30px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <img src="../../assets/KVK_logo.png" class="logo" />
-        <h1>KANDHA VILAS KITCHEN</h1>
-        <p class="subtext">Authentic Catering & Event Specialists</p>
-        <p class="subtext">Phone: +91 98765 43210 | Email: kandhavilaskitchen@gmail.com</p>
-        <p class="subtext">Website: www.kandhavilaskitchen.in</p>
-        <p class="subtext">GSTIN: 29ABCDE1234F1Z5 | FSSAI: 11223344556677</p>
-      </div>
-
-      <div class="title">QUOTATION</div>
-      <div class="subhead">Quotation No: ${quotationNo}</div>
-
-      <div class="section two-col">
-        <div>
-          <b>Bill To:</b><br/>
-          Name: ${selectedQuotation.name}<br/>
-          Phone: ${selectedQuotation.phone}<br/>
-          WhatsApp: ${selectedQuotation.whatsappNumber || "-"}<br/>
-          Number of Persons: ${selectedQuotation.numberOfPerson || "-"}
+    const html = `
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; margin:0; padding:0; color:#000; }
+          .header {
+            background-color:#1a5d3a; color:#fff; text-align:center;
+            padding:15px 10px 10px 10px;
+          }
+          .logo { width:60px; height:60px; object-fit:contain; }
+          h1 { margin:5px 0; font-size:20px; letter-spacing:1px; }
+          .subtext { font-size:10px; margin:0; line-height:14px; }
+          .title { text-align:center; color:#1a5d3a; margin:20px 0 5px; font-size:20px; }
+          .subhead { text-align:center; font-size:11px; color:#333; }
+          table { width:100%; border-collapse:collapse; font-size:11px; }
+          th,td { border:1px solid #ccc; padding:6px; text-align:left; }
+          th { background:#1a5d3a; color:#fff; text-align:center; }
+          .section { padding:0 20px; margin-top:10px; }
+          .two-col { display:flex; justify-content:space-between; }
+          .totals { margin:20px 20px 0; width:260px; float:right; background:#f5f5f5;
+            border-radius:6px; padding:10px; }
+          .totals table { width:100%; border:none; }
+          .totals td { border:none; padding:3px 0; font-size:11px; }
+          .grand { color:#1a5d3a; font-weight:bold; font-size:12px; }
+          .terms { clear:both; padding:0 20px; margin-top:40px; font-size:10px; }
+          .footer { text-align:center; color:#444; font-size:9px; margin-top:30px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <img src="${logoBase64}" class="logo" />
+          <h1>KANDHA VILAS KITCHEN</h1>
+          <p class="subtext">Authentic Catering & Event Specialists</p>
+          <p class="subtext">Phone: +91 98765 43210 | Email: kandhavilaskitchen@gmail.com</p>
+          <p class="subtext">Website: www.kandhavilaskitchen.in</p>
+          <p class="subtext">GSTIN: 29ABCDE1234F1Z5 | FSSAI: 11223344556677</p>
         </div>
-        <div>
-          <b>Quotation Details:</b><br/>
-          Date: ${new Date(selectedQuotation.created_at).toLocaleDateString("en-IN")}<br/>
-          Valid Until: ${validUntil}<br/>
-          Function Date: ${selectedQuotation.date_of_function || "-"}
+
+        <div class="title">QUOTATION</div>
+        <div class="subhead">Quotation No: ${quotationNo}</div>
+
+        <div class="section two-col">
+          <div>
+            <b>Bill To:</b><br/>
+            Name: ${selectedQuotation.name}<br/>
+            Phone: ${selectedQuotation.phone}<br/>
+            WhatsApp: ${selectedQuotation.whatsappNumber || "-"}<br/>
+            Number of Persons: ${selectedQuotation.numberOfPerson || "-"}
+          </div>
+          <div>
+            <b>Quotation Details:</b><br/>
+            Date: ${new Date(selectedQuotation.created_at).toLocaleDateString("en-IN")}<br/>
+            Valid Until: ${validUntil}<br/>
+            Function Date: ${selectedQuotation.date_of_function || "-"}
+          </div>
         </div>
-      </div>
 
-      <div class="section" style="margin-top:20px;">
-        <table>
-          <tr><th>No.</th><th>Dish Name</th><th>Amount (Rs)</th></tr>
-          ${selectedQuotation.list
-            .map(
-              (i, idx) => `
-              <tr>
-                <td style="text-align:center;">${idx + 1}</td>
-                <td>${i.item}</td>
-                <td style="text-align:right;">${i.amount.toFixed(2)}</td>
-              </tr>`
-            )
-            .join("")}
-        </table>
-      </div>
+        <div class="section" style="margin-top:20px;">
+          <table>
+            <tr><th>No.</th><th>Dish Name</th><th>Amount (Rs)</th></tr>
+            ${selectedQuotation.list
+              .map(
+                (i, idx) => `
+                <tr>
+                  <td style="text-align:center;">${idx + 1}</td>
+                  <td>${i.item}</td>
+                  <td style="text-align:right;">${i.amount.toFixed(2)}</td>
+                </tr>`
+              )
+              .join("")}
+          </table>
+        </div>
 
-      <div class="totals">
-        <table>
-          <tr><td>Subtotal:</td><td style="text-align:right;">Rs ${subtotal.toFixed(2)}</td></tr>
-          <tr><td>GST (${gstPercent}%):</td><td style="text-align:right;">Rs ${gstAmount.toFixed(2)}</td></tr>
-          <tr><td colspan="2"><hr/></td></tr>
-          <tr><td class="grand">Grand Total:</td><td class="grand" style="text-align:right;">Rs ${total.toFixed(2)}</td></tr>
-          <tr><td colspan="2" style="font-size:9px;">(Inclusive of all taxes)</td></tr>
-        </table>
-      </div>
+        <div class="totals">
+          <table>
+            <tr><td>Subtotal:</td><td style="text-align:right;">Rs ${subtotal.toFixed(2)}</td></tr>
+            <tr><td>GST (${gstPercent}%):</td><td style="text-align:right;">Rs ${gstAmount.toFixed(2)}</td></tr>
+            <tr><td colspan="2"><hr/></td></tr>
+            <tr><td class="grand">Grand Total:</td><td class="grand" style="text-align:right;">Rs ${total.toFixed(2)}</td></tr>
+            <tr><td colspan="2" style="font-size:9px;">(Inclusive of all taxes)</td></tr>
+          </table>
+        </div>
 
-      <div class="terms">
-        <b>Terms & Conditions:</b><br/>
-        1. This quotation is valid for 15 days from the date of issue.<br/>
-        2. Prices are inclusive of all applicable taxes.<br/>
-        3. 50% advance payment required to confirm the booking.<br/>
-        4. Balance payment to be made before delivery/completion of service.<br/>
-        5. Any changes in menu or services may affect the final pricing.<br/>
-        6. Cancellation policy: 7 days prior to event - full refund, 3–7 days - 50% refund.
-      </div>
+        <div class="terms">
+          <b>Terms & Conditions:</b><br/>
+          1. This quotation is valid for 15 days from the date of issue.<br/>
+          2. Prices are inclusive of all applicable taxes.<br/>
+          3. 50% advance payment required to confirm the booking.<br/>
+          4. Balance payment to be made before delivery/completion of service.<br/>
+          5. Any changes in menu or services may affect the final pricing.<br/>
+          6. Cancellation policy: 7 days prior to event - full refund, 3–7 days - 50% refund.
+        </div>
 
-      <div class="footer">
-        <hr/>
-        Thank you for choosing Kandha Vilas Kitchen!<br/>
-        We guarantee the highest quality and service standards<br/><br/>
-        <b>Authorized Signatory</b>
-      </div>
-    </body>
-  </html>`;
+        <div class="footer">
+          <hr/>
+          Thank you for choosing Kandha Vilas Kitchen!<br/>
+          We guarantee the highest quality and service standards<br/><br/>
+          <b>Authorized Signatory</b>
+        </div>
+      </body>
+    </html>`;
 
-  await Print.printAsync({ html });
-};
+    await Print.printAsync({ html });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3FDF1" }}>
@@ -459,12 +502,13 @@ const styles = StyleSheet.create({
   dishCount: { fontSize: 13, color: "#888" },
   viewButton: { backgroundColor: "#27ae60", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   viewText: { color: "#fff", fontWeight: "bold", fontSize: 13 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)",  justifyContent: "flex-end",  },
   modalContent: {
     backgroundColor: "#fff",
-    width: "92%",
-    maxHeight: "88%",
-    borderRadius: 14,
+    width: "100%",
+    Height: "90%",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     overflow: "hidden",
   },
   modalHeader: {
@@ -477,7 +521,7 @@ const styles = StyleSheet.create({
   modalHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
   modalHeaderText: { color: "white", fontSize: 15, fontWeight: "600" },
   closeIcon: { padding: 5 },
-  modalBody: { padding: 16 },
+  modalBody: { padding: 16 ,paddingVertical: 8 },
   sectionTitle: { fontWeight: "bold", fontSize: 14, marginBottom: 8, color: "#333" },
   infoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   infoCol: { width: "47%" },

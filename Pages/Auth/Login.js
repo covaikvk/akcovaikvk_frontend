@@ -16,18 +16,16 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  // ✅ MAIN LOGIN HANDLER
   const handleLogin = async () => {
     if (!Phonenumber || !password) {
       Alert.alert("Error", "Please enter both phone number and password");
       return;
     }
 
-    // ✅ Always reset before new login
     await AsyncStorage.multiRemove(["isAdmin", "token", "userDetails"]);
 
-    // ✅ ADMIN LOGIN
     if (Phonenumber === "9025161693" && password === "Kvk@2025") {
       const adminData = { name: "Admin", phonenumber: "9025161693" };
 
@@ -37,13 +35,10 @@ export default function LoginScreen({ navigation }) {
         ["userDetails", JSON.stringify(adminData)],
       ]);
 
-      console.log("✅ Admin login, isAdmin set to TRUE");
-      Alert.alert("Admin Login Success", "Welcome Admin");
-      navigation.replace("Home1");
+      setShowSuccessPopup(true);
       return;
     }
 
-    // ✅ NORMAL USER LOGIN
     setLoading(true);
     try {
       const response = await fetch("https://kvk-backend.onrender.com/api/auth/login", {
@@ -59,10 +54,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem("token", data.token);
         await AsyncStorage.setItem("isAdmin", "false");
         await loadProfile(data.token);
-
-        console.log("✅ Normal login, isAdmin set to FALSE");
-        Alert.alert("Login Successful", "Welcome back!");
-        navigation.replace("Home1");
+        setShowSuccessPopup(true);
       } else {
         Alert.alert("Login Failed", data.message || "Invalid credentials");
       }
@@ -77,7 +69,7 @@ export default function LoginScreen({ navigation }) {
   const loadProfile = async (token) => {
     try {
       const response = await fetch("https://kvk-backend.onrender.com/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },    // ✅ Fixed Bearer
       });
 
       const data = await response.json();
@@ -90,7 +82,6 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  // ✅ Debug storage on mount
   useEffect(() => {
     const checkStorage = async () => {
       const token = await AsyncStorage.getItem("token");
@@ -103,6 +94,24 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+      {showSuccessPopup && (
+        <View style={styles.popupContainer}>
+          <View style={styles.popupBox}>
+            <Text style={styles.popupTitle}>Welcome</Text>
+            <Text style={styles.popupMessage}>You’re logged in successfully!</Text>
+            <TouchableOpacity
+              style={styles.popupButton}
+              onPress={() => {
+                setShowSuccessPopup(false);
+                navigation.replace("Home1");
+              }}
+            >
+              <Text style={styles.popupButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <View style={styles.topSection}>
         <Image source={require("../../assets/food_logo.png")} style={styles.logo} resizeMode="contain" />
       </View>
@@ -135,9 +144,7 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.inputUnderline} />
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
-            <Text style={styles.loginButtonText}>
-              {loading ? "LOGGING IN..." : "LOGIN"}
-            </Text>
+            <Text style={styles.loginButtonText}>{loading ? "LOGGING IN..." : "LOGIN"}</Text>
           </TouchableOpacity>
 
           <Text style={styles.signupText}>
@@ -161,7 +168,7 @@ const styles = StyleSheet.create({
   logo: { width: scale(200), height: scale(200), marginTop: scale(60) },
   strip: {
     height: scale(50),
-    backgroundColor: "#4d7c2f",
+    backgroundColor: "#2e5d23",
     borderTopLeftRadius: scale(25),
     borderTopRightRadius: scale(25),
     marginTop: scale(-20),
@@ -191,9 +198,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  eyeIcon: {
-    padding: scale(5),
-  },
+  eyeIcon: { padding: scale(5) },
   inputUnderline: {
     borderBottomColor: "#333",
     borderBottomWidth: 1,
@@ -214,10 +219,28 @@ const styles = StyleSheet.create({
     fontSize: scale(16),
     fontWeight: "bold",
   },
-  signupText: {
-    textAlign: "center",
-    fontSize: scale(16),
-    color: "#000",
-  },
+  signupText: { textAlign: "center", fontSize: scale(16), color: "#000" },
   signUpLink: { color: "#0d0e0dff", fontWeight: "bold" },
+
+  popupContainer: {
+    position: "absolute", top: 0, bottom: 0, left: 0, right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 999,
+  },
+  popupBox: {
+    width: scale(280), backgroundColor: "#fff", borderRadius: 20,
+    padding: scale(20), alignItems: "center",
+  },
+  popupTitle: {
+    fontSize: scale(20), fontWeight: "bold", color: "#1c4b1d", marginBottom: scale(10),
+  },
+  popupMessage: {
+    fontSize: scale(16), color: "#333", textAlign: "center", marginBottom: scale(20),
+  },
+  popupButton: {
+    backgroundColor: "#1c4b1d", paddingVertical: scale(10),
+    paddingHorizontal: scale(20), borderRadius: 10,
+  },
+  popupButtonText: {
+    color: "#fff", fontSize: scale(16), fontWeight: "bold",
+  },
 });

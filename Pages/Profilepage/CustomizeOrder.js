@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import Footer from "../../Components/Footer/Footer";
-import { scale } from "react-native-size-matters"; // ✅ only scale needed
+import { scale } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
@@ -67,27 +67,26 @@ const CustomizeOrder = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3FDF1" }}>
-      {/* ✅ Same Header as Orders Component */}
+      {/* Header */}
       <View style={styles.topcustomizeorder}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={r(24, 30)} color="#007A33" />
         </TouchableOpacity>
         <Text style={styles.topcustomizeorderTitle}>Customize Order</Text>
-        <View style={{ width: r(24, 30) }} /> {/* Spacer */}
+        <View style={{ width: r(24, 30) }} />
       </View>
 
-      {/* 🔹 Main Scrollable Content */}
+      {/* Main Content */}
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 90 }}
+        contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.pagecustomizeorder}>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
-            <Ionicons name="calendar-outline" size={24} color="#007A33" />
+          <View style={styles.titleRow}>
+            <Ionicons name="calendar-outline" size={22} color="#007A33" />
             <Text style={styles.title}> Weekly Menu Orders</Text>
           </View>
-
           <Text style={styles.subtitle}>View all customer weekly meal plans</Text>
         </View>
 
@@ -98,18 +97,11 @@ const CustomizeOrder = () => {
         ) : (
           <View style={styles.ordersGrid}>
             {orders.map((order) => (
-              <View
-                key={order.id}
-                style={[styles.card, { width: getCardWidth() }]}
-              >
-                {/* Card Header */}
-                <View style={styles.cardcustomizeorderHeader}>
+              <View key={order.id} style={[styles.card, { width: getCardWidth() }]}>
+                {/* Header */}
+                <View style={styles.cardHeader}>
                   <View style={styles.customerInfo}>
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={18}
-                      color="#007A33"
-                    />
+                    <Ionicons name="person-circle-outline" size={18} color="#007A33" />
                     <Text style={styles.customerName}>{order.name}</Text>
                   </View>
                   <View style={styles.dateTag}>
@@ -120,7 +112,7 @@ const CustomizeOrder = () => {
                   </View>
                 </View>
 
-                {/* Card Body */}
+                {/* Body */}
                 <View style={styles.cardBody}>
                   <View style={styles.infoRow}>
                     <Ionicons name="call-outline" size={14} color="#7f8c8d" />
@@ -169,7 +161,7 @@ const CustomizeOrder = () => {
                   </View>
                 </View>
 
-                {/* Card Footer */}
+                {/* Footer */}
                 <View style={styles.footer}>
                   <View style={styles.totalRow}>
                     <Text>Total:</Text>
@@ -192,7 +184,6 @@ const CustomizeOrder = () => {
         )}
       </ScrollView>
 
-      {/* 🔹 Fixed Footer */}
       <Footer />
     </View>
   );
@@ -204,42 +195,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F3FDF1",
-    padding: r(16, 24),
+    padding: r(12, 18),
   },
   topcustomizeorder: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: scale(16),
+    padding: scale(12),
     backgroundColor: "#EAFCE6",
     borderBottomWidth: 1,
     borderBottomColor: "#DDEFD8",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   topcustomizeorderTitle: {
-    fontSize: scale(22),
+    fontSize: scale(20),
     fontWeight: "700",
     color: "#007A33",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F3FDF1",
-  },
-  loaderText: {
-    color: "#007A33",
-    marginTop: 8,
-    fontSize: r(14, 18),
-  },
-  pagecustomizeorder: { padding: 20, paddingTop: 16 },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#007A33",
-    marginLeft: 8,
-  },
-  subtitle: { fontSize: 14, color: "#666" },
+  titleRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  pagecustomizeorder: { paddingHorizontal: 16, paddingBottom: 10 },
+  title: { fontSize: 20, fontWeight: "700", color: "#007A33", marginLeft: 8 },
+  subtitle: { fontSize: 13, color: "#666" },
   ordersGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -247,44 +223,39 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
     borderColor: "rgba(0,122,51,0.1)",
     borderWidth: 1,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  cardcustomizeorderHeader: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   customerInfo: { flexDirection: "row", alignItems: "center" },
-  customerName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginLeft: 5,
-  },
+  customerName: { fontSize: 14, fontWeight: "600", color: "#2c3e50", marginLeft: 5 },
   dateTag: {
     backgroundColor: "#EAFCE6",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
   },
-  dateText: { color: "#007A33", fontSize: 12, marginLeft: 5 },
-  cardBody: { marginBottom: 10 },
-  infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  infoText: { fontSize: 13, color: "#555", marginLeft: 6 },
-  addressText: { fontSize: 13, color: "#444", marginBottom: 8 },
-  daysSection: { marginTop: 10 },
-  sectionTitle: { fontWeight: "600", color: "#007A33", marginBottom: 6 },
+  dateText: { color: "#007A33", fontSize: 11, marginLeft: 4 },
+  cardBody: { marginBottom: 6 },
+  infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  infoText: { fontSize: 12, color: "#555", marginLeft: 6 },
+  addressText: { fontSize: 12, color: "#444", marginBottom: 6 },
+  daysSection: { marginTop: 6 },
+  sectionTitle: { fontWeight: "600", color: "#007A33", marginBottom: 4, fontSize: 13 },
   daysGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -294,49 +265,42 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f9f0",
     borderColor: "#c6eac6",
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 6,
+    borderRadius: 8,
+    padding: 4,
     width: "48%",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dayName: {
     color: "#007A33",
     fontWeight: "600",
     fontSize: 12,
     textAlign: "center",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   menuItem: {
     backgroundColor: "#e6f7e6",
-    borderRadius: 6,
-    paddingHorizontal: 4,
-    marginBottom: 2,
+    borderRadius: 5,
+    paddingHorizontal: 3,
+    marginBottom: 1,
     flexDirection: "row",
     flexWrap: "wrap",
   },
   menuKey: { fontWeight: "600", color: "#007A33", fontSize: 11 },
   menuValue: { fontSize: 11, color: "#555", flexShrink: 1 },
   emptyDay: { color: "#aaa", textAlign: "center", fontStyle: "italic" },
-  footer: {
-    borderTopWidth: 1,
-    borderColor: "#ecf0f1",
-    paddingTop: 8,
-  },
+  footer: { borderTopWidth: 1, borderColor: "#ecf0f1", paddingTop: 6 },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 2,
+    paddingVertical: 1,
   },
   totalValue: { color: "#444" },
-  grandTotal: {
-    borderTopWidth: 1,
-    borderColor: "#e0e0e0",
-    marginTop: 5,
-    paddingTop: 6,
-  },
+  grandTotal: { borderTopWidth: 1, borderColor: "#e0e0e0", marginTop: 4, paddingTop: 4 },
   grandTotalValue: { color: "#007A33", fontWeight: "700" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loaderText: { color: "#007A33", marginTop: 8, fontSize: r(14, 16) },
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { color: "red", fontSize: 16 },
-  emptyContainer: { alignItems: "center", padding: 40 },
-  emptyText: { color: "#888", fontSize: 16 },
+  errorText: { color: "red", fontSize: 15 },
+  emptyContainer: { alignItems: "center", padding: 30 },
+  emptyText: { color: "#888", fontSize: 15 },
 });
