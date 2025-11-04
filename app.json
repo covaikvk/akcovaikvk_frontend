@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/icon-image-final.png",
         "backgroundColor": "#165016"
       },
-      "package": "com.kandhavilas.kitchen",
+      "package": "com.kandhavilas.kitchen2",
       "googleServicesFile": "./google-services.json"
     },
 
