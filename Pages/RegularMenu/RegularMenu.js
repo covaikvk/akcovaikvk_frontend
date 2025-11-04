@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -16,13 +18,25 @@ import Footer from "../../Components/Footer/Footer";
 
 const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
+const isLargeTablet = width >= 1024;
+
+// ✅ Responsive layout values
+const sizes = {
+  iconSize: isLargeTablet ? 32 : isTablet ? 26 : 22,
+  titleFontSize: isLargeTablet ? 24 : isTablet ? 20 : 18,
+  paddingHorizontal: isLargeTablet ? 20 : isTablet ? 16 : 12,
+  paddingVertical: isLargeTablet ? 14 : isTablet ? 12 : 10,
+};
+
+const topPadding =
+  Platform.OS === "android" ? (StatusBar.currentHeight || 24) * 0.6 : 35;
 
 const RegularMenu = () => {
   const navigation = useNavigation();
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch menu data from API
+  // ✅ Fetch menu data
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -81,7 +95,7 @@ const RegularMenu = () => {
     fetchMenus();
   }, []);
 
-  // ✅ Update number of persons or weeks
+  // ✅ Update persons/weeks
   const updateMenuField = (menuId, field, value) => {
     setMenus((prevMenus) =>
       prevMenus.map((menu) =>
@@ -90,24 +104,21 @@ const RegularMenu = () => {
     );
   };
 
-// ✅ Proceed button handler
-const handleProceed = (menu) => {
-  const planPrice = Number(menu.amount); // base price of the selected plan
-  const totalAmount = planPrice * menu.persons * menu.weeks;
+  // ✅ Proceed button
+  const handleProceed = (menu) => {
+    const planPrice = Number(menu.amount);
+    const totalAmount = planPrice * menu.persons * menu.weeks;
 
-  navigation.navigate("RegularMenuAddress", {
-    menuDetails: {
-      ...menu,
-      numPersons: menu.persons,
-      numWeeks: menu.weeks,
-      plan_price: planPrice,
-      total_amount: totalAmount,
-    },
-  });
-};
-
-
-
+    navigation.navigate("RegularMenuAddress", {
+      menuDetails: {
+        ...menu,
+        numPersons: menu.persons,
+        numWeeks: menu.weeks,
+        plan_price: planPrice,
+        total_amount: totalAmount,
+      },
+    });
+  };
 
   // ✅ Loading indicator
   if (loading) {
@@ -120,16 +131,32 @@ const handleProceed = (menu) => {
 
   return (
     <View style={styles.mainContainer}>
-      {/* Header */}
-      <View style={styles.regularmenuContainer}>
+      {/* ✅ Compact Header */}
+      <View
+        style={[
+          styles.regularmenuContainer,
+          {
+            paddingTop: topPadding,
+            paddingHorizontal: sizes.paddingHorizontal,
+            paddingVertical: sizes.paddingVertical,
+          },
+        ]}
+      >
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={isTablet ? 28 : 22} color="#173b01" />
+          <Ionicons name="arrow-back" size={sizes.iconSize} color="#173b01" />
         </TouchableOpacity>
-        <Text style={styles.regularmenuTitle}>Regular Menu</Text>
-        <View style={{ width: isTablet ? 28 : 22 }} />
+        <Text
+          style={[
+            styles.regularmenuTitle,
+            { fontSize: sizes.titleFontSize, textAlign: "center" },
+          ]}
+        >
+          Regular Menu
+        </Text>
+        <View style={{ width: sizes.iconSize }} />
       </View>
 
-      {/* Scrollable Menu List */}
+      {/* ✅ Scrollable Menu List */}
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
@@ -152,9 +179,15 @@ const handleProceed = (menu) => {
                 {/* Table Header */}
                 <View style={[styles.row, styles.regularmenuRow]}>
                   <Text style={[styles.cell, styles.dayregularmenu]}>Day</Text>
-                  <Text style={[styles.cell, styles.mealregularmenu]}>Breakfast</Text>
-                  <Text style={[styles.cell, styles.mealregularmenu]}>Lunch</Text>
-                  <Text style={[styles.cell, styles.mealregularmenu]}>Dinner</Text>
+                  <Text style={[styles.cell, styles.mealregularmenu]}>
+                    Breakfast
+                  </Text>
+                  <Text style={[styles.cell, styles.mealregularmenu]}>
+                    Lunch
+                  </Text>
+                  <Text style={[styles.cell, styles.mealregularmenu]}>
+                    Dinner
+                  </Text>
                 </View>
 
                 {/* Table Data */}
@@ -238,7 +271,7 @@ const handleProceed = (menu) => {
                   </View>
                 </View>
 
-                {/* Total + Proceed Button */}
+                {/* Total + Proceed */}
                 <View style={styles.footerRow}>
                   <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
                   <TouchableOpacity
@@ -265,20 +298,20 @@ const handleProceed = (menu) => {
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: "#f7ffed" },
+
   regularmenuContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
     alignItems: "center",
-    paddingVertical: 10,
+    backgroundColor: "#f6fff6",
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#d6e5d6",
   },
   regularmenuTitle: {
-    fontSize: isTablet ? 22 : 18,
     fontWeight: "bold",
     color: "#173b01",
   },
+
   scrollContainer: { marginTop: 5 },
   contentContainer: { padding: 12, paddingBottom: 80 },
   tableContainer: {
@@ -351,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Footer (total + button)
+  // Footer
   footerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
