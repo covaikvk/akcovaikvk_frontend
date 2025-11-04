@@ -14,6 +14,24 @@ import Footer from "../../Components/Footer/Footer";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+
+// 🟢 Helper function to choose a color for payment status
+const getPaymentColor = (status) => {
+  switch ((status || "").toLowerCase()) {
+    case "paid":
+      return "#1E7B1E"; // green
+    case "pending":
+      return "#C97E06"; // orange
+    case "failed":
+    case "cancelled":
+      return "#C62828"; // red
+    default:
+      return "#1E3A08"; // dark green default
+  }
+};
+
+
 const { width } = Dimensions.get("window");
 const isTablet = width >= 768;
 const r = (mobileSize, tabletSize) => (isTablet ? tabletSize : mobileSize);
@@ -27,7 +45,6 @@ export default function Myorder() {
   const [userDetails, setUserDetails] = useState(null);
   const [reordering, setReordering] = useState(null);
 
-  
   const [showMoreOrders, setShowMoreOrders] = useState(false);
   const [showMoreRegular, setShowMoreRegular] = useState(false);
   const [showMoreCustom, setShowMoreCustom] = useState(false);
@@ -293,151 +310,205 @@ export default function Myorder() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: r(100, 150) }}
       >
-        <Text style={styles.sectionTitle}>Regular Product Orders</Text>
-        {orders.length > 0 ? (
-          <>
-            {orders
-              .slice(0, showMoreOrders ? orders.length : 3)
-              .map((order) => {
-                const { day, month } = formatDate(order.created_at);
-                const itemsText = order.items
-                  .map((item) =>
-                    item.name
-                      ? `${item.name} x${item.quantity}`
-                      : `ProductID:${item.product_id} x${item.quantity}`
-                  )
-                  .join(", ");
-                return (
-                  <View key={order.id} style={styles.card}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.row}>
-                        <View style={styles.dateContainer}>
-                          <Text style={styles.dateText}>{day}</Text>
-                          <Text style={styles.yearText}>{month}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.title}>{order.name}</Text>
-                          <Text style={styles.items}>{itemsText}</Text>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.smallReorderButton}
-                        onPress={() => handleReorderNormal(order)}
-                        disabled={reordering === order.id}
-                      >
-                        {reordering === order.id ? (
-                          <ActivityIndicator size="small" color="#1E3A08" />
-                        ) : (
-                          <Text style={styles.reorderButtonText}>Reorder</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.divider} />
-                    <View style={styles.footerRow}>
-                      <Text style={styles.total}>
-                        Total: ₹{order.total_amount}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.status,
-                          { color: getStatusColor(order.order_status) },
-                        ]}
-                      >
-                        {order.order_status}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            {orders.length > 5 && (
-              <TouchableOpacity
-                style={styles.seeMoreBtn}
-                onPress={() => setShowMoreOrders(!showMoreOrders)}
-              >
-                <Text style={styles.seeMoreText}>
-                  {showMoreOrders ? "See Less" : "See More"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </>
-        ) : (
-          <Text style={styles.noDataText}>No normal orders found</Text>
-        )}
+       {/* Regular Product Orders */}
+<Text style={styles.sectionTitle}>Regular Orders</Text>
+{orders.length > 0 ? (
+  <>
+    {orders
+      .slice(0, showMoreOrders ? orders.length : 3)
+      .map((order) => {
+        const { day, month, year, fullDate } = formatDate(order.created_at);
+        const itemsText = order.items
+          .map((item) =>
+            item.name
+              ? `${item.name} x${item.quantity}`
+              : `ProductID:${item.product_id} x${item.quantity}`
+          )
+          .join(", ");
 
-        <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
-          Regular Menu Orders
+        return (
+          <View key={order.id} style={styles.card}>
+            {/* 🔹 Header */}
+            <View style={styles.cardHeader}>
+              <View style={styles.row}>
+                <View style={styles.dateContainer}>
+                  <Text style={styles.dateText}>{day}</Text>
+                  <Text style={styles.yearText}>{month}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{order.name}</Text>
+                  <Text style={styles.items}>{itemsText}</Text>
+                </View>
+              </View>
+
+              {/* 🔹 Reorder Button */}
+              <TouchableOpacity
+                style={styles.smallReorderButton}
+                onPress={() => handleReorderNormal(order)}
+                disabled={reordering === order.id}
+              >
+                {reordering === order.id ? (
+                  <ActivityIndicator size="small" color="#1E3A08" />
+                ) : (
+                  <Text style={styles.reorderButtonText}>Reorder</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* 🔹 Divider */}
+            <View style={styles.divider} />
+
+            {/* 🔹 Footer Info */}
+            <View style={styles.footerRow}>
+              <Text style={styles.total}>Total: ₹{order.total_amount}</Text>
+              <Text
+                style={[
+                  styles.status,
+                  { color: getStatusColor(order.order_status) },
+                ]}
+              >
+                {order.order_status}
+              </Text>
+            </View>
+
+            {/* 🔹 Added Payment Status + Order Date */}
+            <View style={{ marginTop: 8 }}>
+              <Text style={styles.paymentText}>
+                Payment Status:{" "}
+                <Text style={{ fontWeight: "600", color: "#1E3A08" }}>
+                  {order.payment_status
+                    ? order.payment_status
+                    : "Not Available"}
+                </Text>
+              </Text>
+              <Text style={styles.dateFooter}>
+                Order Date: {fullDate ? fullDate : order.created_at}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+
+    {orders.length > 5 && (
+      <TouchableOpacity
+        style={styles.seeMoreBtn}
+        onPress={() => setShowMoreOrders(!showMoreOrders)}
+      >
+        <Text style={styles.seeMoreText}>
+          {showMoreOrders ? "See Less" : "See More"}
         </Text>
-        {regularOrders.length > 0 ? (
-          <>
-            {regularOrders
-              .slice(0, showMoreRegular ? regularOrders.length : 3)
-              .map((order) => {
-                const { day, month, fullDate } = formatDate(order.created_at);
-                return (
-                  <View key={order.id} style={styles.card}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.row}>
-                        <View style={styles.dateContainer}>
-                          <Text style={styles.dateText}>{day}</Text>
-                          <Text style={styles.yearText}>{month}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.regularTitle}>{order.name}</Text>
-                          <Text style={styles.regularSubTitle}>
-                            {order.regularmenuname}
-                          </Text>
-                          <Text style={styles.items}>
-                            👥 {order.numberOfPerson} Person(s) × 🗓{" "}
-                            {order.numberOfWeeks} Week(s)
-                          </Text>
-                          <Text style={styles.items}>🏠 {order.address_1}</Text>
-                        </View>
-                      </View>
+      </TouchableOpacity>
+    )}
+  </>
+) : (
+  <Text style={styles.noDataText}>No normal orders found</Text>
+)}
 
-                      <TouchableOpacity
-                        style={styles.smallReorderButton}
-                        onPress={() => handleReorderRegularMenu(order)}
-                        disabled={reordering === order.id}
-                      >
-                        {reordering === order.id ? (
-                          <ActivityIndicator size="small" color="#1E3A08" />
-                        ) : (
-                          <Text style={styles.reorderButtonText}>Reorder</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.divider} />
-                    <View style={styles.footerRow}>
-                      <Text style={styles.total}>
-                        Plan ₹{order.plan_price} | Total ₹{order.total_amount}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.status,
-                          { color: getStatusColor(order.order_status) },
-                        ]}
-                      >
-                        {order.order_status}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            {regularOrders.length > 5 && (
+
+      {/* Regular Menu Orders */}
+<Text style={[styles.sectionTitle, { marginTop: 25 }]}>
+  Regular Menu Orders
+</Text>
+
+{regularOrders.length > 0 ? (
+  <>
+    {regularOrders
+      .slice(0, showMoreRegular ? regularOrders.length : 3)
+      .map((order) => {
+        const { day, month } = formatDate(order.created_at);
+        return (
+          <View key={order.id} style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.row}>
+                <View style={styles.dateContainer}>
+                  <Text style={styles.dateText}>{day}</Text>
+                  <Text style={styles.yearText}>{month}</Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.regularTitle}>{order.name}</Text>
+                  <Text style={styles.regularSubTitle}>
+                    {order.regularmenuname}
+                  </Text>
+
+                  <Text style={styles.items}>
+                    👥 {order.numberOfPerson} Person(s) × 🗓{" "}
+                    {order.numberOfWeeks} Week(s)
+                  </Text>
+
+                  <Text style={styles.items}>🏠 {order.address_1}</Text>
+                  {order.address_2 ? (
+                    <Text style={styles.items}>🏠 {order.address_2}</Text>
+                  ) : null}
+
+                  {/* Payment Status */}
+                  <Text
+                    style={[
+                      styles.paymentText,
+                      { color: getPaymentColor(order.payment_status) },
+                    ]}
+                  >
+                    💳 Payment Status:{" "}
+                    {order.payment_status ? order.payment_status : "N/A"}
+                  </Text>
+
+                  {/* Order Date */}
+                  <Text style={styles.dateFooter}>
+                    📅 Ordered on:{" "}
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </Text>
+                </View>
+              </View>
+
               <TouchableOpacity
-                style={styles.seeMoreBtn}
-                onPress={() => setShowMoreRegular(!showMoreRegular)}
+                style={styles.smallReorderButton}
+                onPress={() => handleReorderRegularMenu(order)}
+                disabled={reordering === order.id}
               >
-                <Text style={styles.seeMoreText}>
-                  {showMoreRegular ? "See Less" : "See More"}
-                </Text>
+                {reordering === order.id ? (
+                  <ActivityIndicator size="small" color="#1E3A08" />
+                ) : (
+                  <Text style={styles.reorderButtonText}>Reorder</Text>
+                )}
               </TouchableOpacity>
-            )}
-          </>
-        ) : (
-          <Text style={styles.noDataText}>No regular menu orders found</Text>
-        )}
+            </View>
 
+            <View style={styles.divider} />
+
+            <View style={styles.footerRow}>
+              <Text style={styles.total}>
+                Plan ₹{order.plan_price} | Total ₹{order.total_amount}
+              </Text>
+              <Text
+                style={[
+                  styles.status,
+                  { color: getStatusColor(order.order_status) },
+                ]}
+              >
+                {order.order_status}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
+
+    {regularOrders.length > 5 && (
+      <TouchableOpacity
+        style={styles.seeMoreBtn}
+        onPress={() => setShowMoreRegular(!showMoreRegular)}
+      >
+        <Text style={styles.seeMoreText}>
+          {showMoreRegular ? "See Less" : "See More"}
+        </Text>
+      </TouchableOpacity>
+    )}
+  </>
+) : (
+  <Text style={styles.noDataText}>No regular menu orders found</Text>
+)}
+
+
+        {/* Customized Menu Orders */}
         <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
           Customized Menu Orders
         </Text>
@@ -460,6 +531,29 @@ export default function Myorder() {
                           <Text style={styles.items}>
                             👥 {order.number_of_persons} | 🗓{" "}
                             {order.number_of_weeks} Weeks
+                          </Text>
+
+                          {/* ✅ Added new details below */}
+                          <Text style={styles.items}>🏠 {order.address_1}</Text>
+                          {order.address_2 ? (
+                            <Text style={styles.items}>
+                              📍 {order.address_2}
+                            </Text>
+                          ) : null}
+                          <Text
+                            style={[
+                              styles.items,
+                              {
+                                color: getPaymentStatusColor(
+                                  order.payment_status
+                                ),
+                              },
+                            ]}
+                          >
+                            💰 Payment: {order.payment_status || "Pending"}
+                          </Text>
+                          <Text style={styles.dateFooter}>
+                            📅 Booked: {fullDate}
                           </Text>
                         </View>
                       </View>
@@ -512,22 +606,22 @@ export default function Myorder() {
     </View>
   );
 }
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5FFE9",
     paddingTop: r(40, 60),
   },
+
+  // 🔹 Header
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: r(16, 30),
     marginBottom: r(25, 40),
   },
-  backBtn: { 
-    marginRight: r(10, 20) 
+  backBtn: {
+    marginRight: r(10, 20),
   },
   headerText: {
     fontSize: r(32, 48),
@@ -536,9 +630,11 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
   },
+
+  // 🔹 Card
   card: {
     backgroundColor: "#E2F5D3",
-    borderRadius: r(16, 24),
+    borderRadius: r(18, 26),
     padding: r(20, 30),
     marginHorizontal: r(18, 36),
     marginBottom: r(18, 28),
@@ -553,61 +649,69 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  row: { 
-    flexDirection: "row", 
+  row: {
+    flexDirection: "row",
     alignItems: "flex-start",
     flex: 1,
   },
+
+  // 🔹 Date Box
   dateContainer: {
     alignItems: "center",
     justifyContent: "center",
     marginRight: r(14, 22),
     backgroundColor: "#1E3A08",
-    borderRadius: r(10, 16),
+    borderRadius: r(12, 18),
     paddingVertical: r(10, 14),
     paddingHorizontal: r(8, 12),
     width: r(70, 100),
   },
-  dateText: { 
-    fontSize: r(20, 28), 
-    fontWeight: "bold", 
-    color: "white" 
+  dateText: {
+    fontSize: r(20, 28),
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
-  yearText: { 
-    fontSize: r(14, 18), 
-    color: "white", 
-    opacity: 0.9 
+  yearText: {
+    fontSize: r(14, 18),
+    color: "#FFFFFF",
+    opacity: 0.9,
   },
-  title: { 
-    fontSize: r(20, 28), 
-    fontWeight: "bold", 
-    color: "#1E3A08" 
+
+  // 🔹 Texts
+  title: {
+    fontSize: r(20, 28),
+    fontWeight: "bold",
+    color: "#1E3A08",
   },
-  items: { 
-    fontSize: r(15, 20), 
-    color: "#2F4F1F", 
-    marginVertical: r(6, 10) 
+  items: {
+    fontSize: r(15, 20),
+    color: "#2F4F1F",
+    marginVertical: r(6, 10),
   },
-  divider: { 
-    borderBottomWidth: 1.5, 
-    borderBottomColor: "#A5C98A", 
-    marginVertical: r(10, 14) 
+  divider: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#A5C98A",
+    marginVertical: r(10, 14),
   },
-  footerRow: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center" 
+
+  // 🔹 Footer Row
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  total: { 
-    fontSize: r(16, 20), 
-    fontWeight: "bold", 
-    color: "#1E3A08" 
+  total: {
+    fontSize: r(16, 20),
+    fontWeight: "bold",
+    color: "#1E3A08",
   },
-  status: { 
-    fontSize: r(16, 20), 
-    fontWeight: "600", 
-    textTransform: "capitalize" 
+  status: {
+    fontSize: r(16, 20),
+    fontWeight: "600",
+    textTransform: "capitalize",
   },
+
+  // 🔹 Section Titles
   sectionTitle: {
     fontSize: r(22, 30),
     fontWeight: "bold",
@@ -617,10 +721,11 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     textDecorationColor: "#A5C98A",
   },
-  regularTitle: { 
-    fontSize: r(20, 28), 
-    fontWeight: "bold", 
-    color: "#1E3A08" 
+
+  regularTitle: {
+    fontSize: r(20, 28),
+    fontWeight: "bold",
+    color: "#1E3A08",
   },
   regularSubTitle: {
     fontSize: r(17, 22),
@@ -633,29 +738,31 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 6,
   },
-  paymentText: { 
-    fontSize: r(14, 18), 
-    color: "#555", 
-    marginTop: 6, 
-    fontStyle: "italic" 
+
+  // 🔹 Subtexts
+  paymentText: {
+    fontSize: r(14, 18),
+    color: "#555",
+    marginTop: 6,
+    fontStyle: "italic",
   },
-  dateFooter: { 
-    fontSize: r(13, 17), 
-    color: "#444", 
-    marginTop: 4, 
-    opacity: 0.8 
+  dateFooter: {
+    fontSize: r(13, 17),
+    color: "#444",
+    marginTop: 4,
+    opacity: 0.8,
   },
-  noDataText: { 
-    textAlign: "center", 
-    color: "#666", 
-    fontSize: r(16, 22), 
-    marginTop: 10 
+  noDataText: {
+    textAlign: "center",
+    color: "#666",
+    fontSize: r(16, 22),
+    marginTop: 10,
   },
-  
-  // Custom Menu Order Styles
+
+  // 🔹 Custom Menu Details
   detailsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: r(8, 12),
   },
   detailItem: {
@@ -665,33 +772,35 @@ const styles = StyleSheet.create({
     marginBottom: r(4, 6),
   },
   detailLabel: {
-    fontWeight: '600',
+    fontWeight: "600",
     color: "#1E3A08",
   },
   addressContainer: {
     marginBottom: r(8, 12),
   },
   totalContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: r(8, 12),
   },
   totalAmount: {
     fontSize: r(18, 24),
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: "#1E3A08",
   },
+
+  // 🔹 Status
   statusContainer: {
     marginTop: r(8, 12),
   },
   statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: r(8, 12),
   },
   statusItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statusLabel: {
     fontSize: r(14, 18),
@@ -700,16 +809,18 @@ const styles = StyleSheet.create({
   },
   statusValue: {
     fontSize: r(14, 18),
-    fontWeight: '600',
+    fontWeight: "600",
+    color: "#1E3A08",
   },
   orderDate: {
     fontSize: r(13, 17),
     color: "#444",
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
     opacity: 0.8,
   },
 
+  // 🔹 Reorder Button (small)
   smallReorderButton: {
     backgroundColor: "#C4E6A1",
     paddingVertical: r(6, 8),
@@ -723,8 +834,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: r(3, 4),
     elevation: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   reorderButtonText: {
     fontSize: r(12, 14),
@@ -732,6 +843,7 @@ const styles = StyleSheet.create({
     color: "#1E3A08",
   },
 
+  // 🔹 Footer Wrapper
   footerWrapper: {
     position: "absolute",
     bottom: 0,
@@ -739,18 +851,53 @@ const styles = StyleSheet.create({
     right: 0,
   },
 
+  // 🔹 See More Button
   seeMoreBtn: {
     alignSelf: "flex-end",
-    marginRight: r(22, 36), 
+    marginRight: r(22, 36),
     marginVertical: 10,
     paddingHorizontal: 20,
     paddingVertical: 8,
     backgroundColor: "#C4E6A1",
     borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 3,
+    elevation: 2,
   },
   seeMoreText: {
     color: "#1E3A08",
     fontWeight: "bold",
     fontSize: 16,
   },
+
+
+  paymentText: {
+  fontSize: 14,
+  color: "#444",
+  marginTop: 4,
+  fontFamily: "System",
+},
+
+dateFooter: {
+  fontSize: 13,
+  color: "#666",
+  marginTop: 2,
+  fontStyle: "italic",
+},
+paymentText: {
+  fontSize: 14,
+  color: "#444",
+  marginTop: 6,
+  fontStyle: "italic",
+},
+
+dateFooter: {
+  fontSize: 13,
+  color: "#555",
+  marginTop: 4,
+  opacity: 0.8,
+},
+
 });

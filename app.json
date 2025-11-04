@@ -21,10 +21,10 @@
 
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icom-image-final.png",
+        "foregroundImage": "./assets/icon-image-final.png",
         "backgroundColor": "#165016"
       },
-      "package": "com.kvkcovai.foodapp",
+      "package": "com.kandhavilas.kitchen",
       "googleServicesFile": "./google-services.json"
     },
 
