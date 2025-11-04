@@ -70,12 +70,29 @@ export default function Quotation1() {
         <ScrollView contentContainerStyle={styles.container}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={normalize(28)} color="#173b01" />
-            </TouchableOpacity>
+           <TouchableOpacity
+  onPress={() => {
+    console.log("Back button pressed");
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("Home1");
+    }
+  }}
+  style={styles.backButton}
+>
+  <Ionicons name="arrow-back" size={normalize(30)} color="#000000ff" />
+</TouchableOpacity>
 
-            <Text style={styles.servicesHeading}>Party Orders</Text>
-            <View style={{ width: normalize(28) }} />
+
+
+<Text pointerEvents="none" style={styles.servicesHeading}>
+  Party Orders
+</Text>
+
+
+            {/* <Text style={styles.servicesHeading}>Party Orders</Text> */}
+            {/* <View style={{ width: normalize(28) }} /> */}
           </View>
 
           {loading ? (

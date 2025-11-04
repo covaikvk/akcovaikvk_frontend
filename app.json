@@ -27,10 +27,7 @@
 
     "android": {
       "package": "com.kandhavilas.kitchen",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-image-final.png",
-        "backgroundColor": "#165016"
-      },
+      
       "googleServicesFile": "./google-services.json"
     },
     "ios": {
