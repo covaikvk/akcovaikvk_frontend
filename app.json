@@ -15,17 +15,17 @@
       }
     },
 
-    "ios": {
-      "supportsTablet": true
-    },
-
     "android": {
+      "package": "com.kandhavilas.kitchen2",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon-image-final.png",
         "backgroundColor": "#165016"
       },
-      "package": "com.kandhavilas.kitchen2",
       "googleServicesFile": "./google-services.json"
+    },
+
+    "ios": {
+      "supportsTablet": true
     },
 
     "web": {
@@ -38,19 +38,10 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "packagingOptions": {
-              "pickFirst": [
-                "lib/**/libc++_shared.so",
-                "lib/**/libfbjni.so"
-              ]
-            },
-            "usesCleartextTraffic": true,
-            "enableMinifyInReleaseBuilds": true
+            "usesCleartextTraffic": true
           }
         }
       ]
-    ],
-
-    "owner": "dineshmani123"
+    ]
   }
 }

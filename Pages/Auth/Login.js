@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Image, ScrollView, Alert, Dimensions
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Alert,
+  Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -69,7 +76,7 @@ export default function LoginScreen({ navigation }) {
   const loadProfile = async (token) => {
     try {
       const response = await fetch("https://kvk-backend.onrender.com/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },    // ✅ Fixed Bearer
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await response.json();
@@ -143,13 +150,20 @@ export default function LoginScreen({ navigation }) {
 
           <View style={styles.inputUnderline} />
 
+          {/* ✅ Forgot Password Link */}
+          <TouchableOpacity onPress={() => navigation.navigate("Forgotpassword")}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
             <Text style={styles.loginButtonText}>{loading ? "LOGGING IN..." : "LOGIN"}</Text>
           </TouchableOpacity>
 
           <Text style={styles.signupText}>
             Don’t have an account?{" "}
-            <Text style={styles.signUpLink} onPress={() => navigation.navigate("Signup")}>Sign up</Text>
+            <Text style={styles.signUpLink} onPress={() => navigation.navigate("Signup")}>
+              Sign up
+            </Text>
           </Text>
         </View>
       </View>
@@ -242,5 +256,14 @@ const styles = StyleSheet.create({
   },
   popupButtonText: {
     color: "#fff", fontSize: scale(16), fontWeight: "bold",
+  },
+
+   forgotPasswordText: {
+    color: "#025b1bff",
+    textAlign: "right",
+    marginTop: scale(5),
+    marginBottom: scale(10),
+    fontSize: scale(14),
+    fontWeight: "500",
   },
 });
