@@ -3,8 +3,19 @@
     "version": ">= 3.13.0"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "ORG_GRADLE_PROJECT_android_newArchEnabled": "true",
+        "ORG_GRADLE_PROJECT_expo_newArchEnabled": "true"
+      },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
@@ -12,10 +23,17 @@
     },
     "production": {
       "distribution": "internal",
+      "env": {
+        "ORG_GRADLE_PROJECT_android_newArchEnabled": "true",
+        "ORG_GRADLE_PROJECT_expo_newArchEnabled": "true"
+      },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
