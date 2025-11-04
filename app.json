@@ -8,12 +8,22 @@
     "scheme": "kandha-vilas-kitchen",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    
+
+    "splash": {
+      "image": "./assets/logo1.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#165016"
+    },
+
 
     "extra": {
       "eas": {
         "projectId": "5324e4f5-7944-4595-a7be-c095948e12c8"
       }
     },
+
+    
 
     "android": {
       "package": "com.kandhavilas.kitchen",
