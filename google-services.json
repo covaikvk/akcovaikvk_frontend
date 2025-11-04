@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:117836324819:android:f4b8ad3b5684170c37d926",
+        "android_client_info": {
+          "package_name": "com.kandhavilas.kitchen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkWOOUtI6QVXpzOsVZN0XY0e67BCgPymc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:117836324819:android:97dbae1c4bd239f237d926",
         "android_client_info": {
           "package_name": "com.kvk.foodapp"

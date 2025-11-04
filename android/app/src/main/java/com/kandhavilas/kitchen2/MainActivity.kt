@@ -1,4 +1,4 @@
-package com.kvkcovai.foodapp
+package com.kandhavilas.kitchen2
 
 import android.os.Build
 import android.os.Bundle
