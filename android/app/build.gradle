@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.kandhavilas.kitchen2'
+    namespace 'com.kandhavilas.kitchen'
     defaultConfig {
-        applicationId 'com.kandhavilas.kitchen2'
+        applicationId 'com.kandhavilas.kitchen'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

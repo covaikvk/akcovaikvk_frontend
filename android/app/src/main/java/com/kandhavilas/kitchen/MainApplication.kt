@@ -1,4 +1,4 @@
-package com.kandhavilas.kitchen2
+package com.kandhavilas.kitchen
 
 import android.app.Application
 import android.content.res.Configuration

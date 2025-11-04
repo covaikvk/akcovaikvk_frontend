@@ -1,4 +1,4 @@
-package com.kandhavilas.kitchen2
+package com.kandhavilas.kitchen
 
 import android.os.Build
 import android.os.Bundle
